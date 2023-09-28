@@ -51,7 +51,7 @@ export class FhirService {
       console.log('response', response)
       return response.data;
     } catch (error) {
-      console.log('error', error)
+      console.log('error', error.response.data)
       throw new Error(`Failed to create ${resourceType}.`);
     }
   }
