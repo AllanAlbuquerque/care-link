@@ -14,15 +14,13 @@ import { Employee } from './app.entity';
     HttpModule.register({
       timeout: 5000, // Optional: Configure your timeout settings
     }),
-    TypeOrmModule.forRoot({
-      type: 'mssql',
-      database: 'CareLink',
-      port: 1433,
-      host: 'fhir-care-link.database.windows.net',
-      username: 'fhiruser',
-      password: 'CareLink23*',
-      entities: ['dist/**/*.entity{.ts,.js}'],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: 'mssql',
+        url: process.env.DATABASE_URL,
+        synchronize: true, // For development only; consider setting to false in production
+        entities: ['dist/**/*.entity{.ts,.js}'],
+      }),
     }),
     TypeOrmModule.forFeature([Employee]),
     PatientModule,
