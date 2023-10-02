@@ -48,10 +48,9 @@ export class FhirService {
 
     try {
       const response = await this.httpService.post(url, data, config).toPromise();
-      console.log('response', response)
       return response.data;
     } catch (error) {
-      console.log('error', error.response.data)
+      console.log(error.response.data);
       throw new Error(`Failed to create ${resourceType}.`);
     }
   }

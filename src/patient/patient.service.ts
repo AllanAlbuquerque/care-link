@@ -2,10 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { FhirService } from 'src/fhir.service';
+import { Repository } from 'typeorm';
+import { plainToClass } from 'class-transformer';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Patient } from './entities/patient.entity';
 
 @Injectable()
 export class PatientService {
-  constructor(private readonly fhirService: FhirService) {}
+  constructor(
+    @InjectRepository(Patient)
+    private readonly patientRepository: Repository<Patient>,
+    private readonly fhirService: FhirService,
+  ) {}
 
   async create(createPatientDto: CreatePatientDto): Promise<any> {
     try {
@@ -14,8 +22,16 @@ export class PatientService {
         ...new CreatePatientDto(), // Initialize with default values
         ...createPatientDto,
       };
-      console.log(createPatientDto)
-      const createdPatient = await this.fhirService.createResource('Patient', newPatient);
+      console.log(createPatientDto);
+      const createdPatient = await this.fhirService.createResource(
+        'Patient',
+        newPatient,
+      );
+
+      // Insert Patient into database
+      const patient = plainToClass(Patient, createdPatient);
+      await this.patientRepository.save(patient);
+
       return createdPatient;
     } catch (error) {
       throw new Error('Failed to create patient.');
@@ -23,9 +39,8 @@ export class PatientService {
   }
 
   async findAll(): Promise<any[]> {
-    // You should implement logic to retrieve all patients from the FHIR service.
-    // Replace the following line with an appropriate call to the FHIR service.
-    return [];
+    const patients = await this.patientRepository.find();
+    return patients;
   }
 
   async findOne(id: string): Promise<any> {
@@ -41,7 +56,10 @@ export class PatientService {
     }
   }
 
-  async update(id: string, updatePatientDto: UpdatePatientDto): Promise<string> {
+  async update(
+    id: string,
+    updatePatientDto: UpdatePatientDto,
+  ): Promise<string> {
     try {
       // Use the FhirService to update a patient in the Azure FHIR service.
       await this.fhirService.updateResource('Patient', id, updatePatientDto);

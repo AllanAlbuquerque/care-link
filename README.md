@@ -26,6 +26,10 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Migrations
+npx typeorm migration:generate -n ChangeMessage
+npx typeorm migration:run
+
 ## Installation
 
 ```bash
