@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, NotFoundException, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Res, HttpStatus, NotFoundException, ValidationPipe } from '@nestjs/common';
 import { PractitionerService } from './practitioner.service';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto';
@@ -42,7 +42,7 @@ export class PractitionerController {
     }
   }
 
-  @Patch(':id')
+  @Put(':id')
   async update(@Param('id') id: string, @Body(new ValidationPipe()) updatePractitionerDto: UpdatePractitionerDto, @Res() res: Response) {
     try {
       const message = await this.practitionerService.update(id, updatePractitionerDto);

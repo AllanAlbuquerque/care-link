@@ -6,6 +6,7 @@ import { Practitioner } from './entities/practitioner.entity';
 import { Repository } from 'typeorm';
 import { plainToClass } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
+import { identity } from 'rxjs';
 
 @Injectable()
 export class PractitionerService {
@@ -22,6 +23,7 @@ export class PractitionerService {
         ...new CreatePractitionerDto(), // Initialize with default values
         ...createPractitionerDto,
       };
+
       const organizations = newPractitioner.organizations;
 
       // Remove the organizations property from the newPractitioner object.
@@ -56,6 +58,7 @@ export class PractitionerService {
 
   async findOne(id: string): Promise<any> {
     try {
+      
       // Use the FhirService to retrieve a practitioner from the Azure FHIR service.
       const practitioner = await this.fhirService.getResource(
         'Practitioner',
@@ -75,14 +78,38 @@ export class PractitionerService {
     updatePractitionerDto: UpdatePractitionerDto,
   ): Promise<string> {
     try {
+
+      // Use the FhirService to create a practitioner in the Azure FHIR service.
+      const newPractitioner = {
+        ...new CreatePractitionerDto(), // Initialize with default values
+        ...updatePractitionerDto,
+      };
+      const organizations = newPractitioner.organizations;
+
+      // Remove the organizations property from the newPractitioner object.
+      delete newPractitioner.organizations;
+
       // Use the FhirService to update a practitioner in the Azure FHIR service.
-      await this.fhirService.updateResource(
+      const createdPractitioner = await this.fhirService.updateResource(
         'Practitioner',
         id,
-        updatePractitionerDto,
+        newPractitioner,
       );
+
+      // Add the organizations to the practitioner.
+      createdPractitioner.organization = organizations;     
+     
+      // Name is just the text
+      createdPractitioner.name = createdPractitioner.name[0].text;
+      console.log(createdPractitioner);
+
+      //!CORRIGIR: EntityPropertyNotFoundError: Property "resourceType" was not found in "Practitioner". Make sure your query is correct.
+      const practitioner = plainToClass(Practitioner, createdPractitioner);
+      await this.practitionerRepository.update(id, practitioner);
+
       return `Practitioner #${id} updated successfully`;
     } catch (error) {
+      console.log(error);
       throw new Error(`Failed to update Practitioner #${id}.`);
     }
   }
@@ -91,6 +118,7 @@ export class PractitionerService {
     try {
       // Use the FhirService to delete a practitioner from the Azure FHIR service.
       await this.fhirService.deleteResource('Practitioner', id);
+      await this.practitionerRepository.delete(id);
       return `Practitioner #${id} removed successfully`;
     } catch (error) {
       throw new Error(`Failed to remove Practitioner #${id}.`);

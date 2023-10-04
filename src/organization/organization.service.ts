@@ -80,6 +80,7 @@ export class OrganizationService {
     try {
       // Use the FhirService to delete a organization from the Azure FHIR service.
       await this.fhirService.deleteResource('Organization', id);
+      await this.organizationRepository.delete(id);
       return `Organization #${id} removed successfully`;
     } catch (error) {
       throw new Error(`Failed to remove Organization #${id}.`);

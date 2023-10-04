@@ -74,7 +74,7 @@ export class FhirService {
     }
   }
 
-  async updateResource(resourceType: string, id: string, data: any): Promise<void> {
+  async updateResource(resourceType: string, id: string, data: any): Promise<any> {
     const accessToken = await this.getAccessToken();
     const url = `${this.fhirBaseUrl}/${resourceType}/${id}`;
     
@@ -86,8 +86,10 @@ export class FhirService {
     };
 
     try {
-      await this.httpService.put(url, data, config).toPromise();
+      const response = await this.httpService.put(url, data, config).toPromise();
+      return response.data;
     } catch (error) {
+      console.log(error.response.data);
       throw new Error(`Failed to update ${resourceType} with ID ${id}.`);
     }
   }
