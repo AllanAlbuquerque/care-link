@@ -22,7 +22,6 @@ export class PatientService {
         ...new CreatePatientDto(), // Initialize with default values
         ...createPatientDto,
       };
-      console.log(createPatientDto);
       const createdPatient = await this.fhirService.createResource(
         'Patient',
         newPatient,
@@ -30,10 +29,16 @@ export class PatientService {
 
       // Insert Patient into database
       const patient = plainToClass(Patient, createdPatient);
+      const nameArray = Array.isArray(patient.name) ? patient.name : [patient.name];
+      const givenName = nameArray[0].given ? nameArray[0].given[0] : '';
+      const familyName = nameArray[0].family ? nameArray[0].family : '';
+      patient.name = givenName + ' ' + familyName;
+      console.log(patient);
       await this.patientRepository.save(patient);
 
       return createdPatient;
     } catch (error) {
+      console.log(error);
       throw new Error('Failed to create patient.');
     }
   }
